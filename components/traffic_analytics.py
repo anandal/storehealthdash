@@ -8,6 +8,15 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from components.chart_styles import (
+    apply_premium_styling,
+    create_bar_chart,
+    create_line_chart,
+    create_pie_chart,
+    create_heatmap,
+    create_scatter_chart,
+    SCENEIQ_COLORS
+)
 
 def show_traffic_analytics():
     """Display store visit and traffic analytics dashboard"""
@@ -147,16 +156,16 @@ def show_visitor_trends(daily_traffic):
     # Aggregate by date across all stores
     daily_visitors = daily_traffic.groupby('date')['total_visitors'].sum().reset_index()
     
-    # Create line chart
-    fig = px.line(
-        daily_visitors,
+    # Create premium styled line chart
+    fig = create_line_chart(
+        df=daily_visitors,
         x='date',
         y='total_visitors',
-        labels={'date': 'Date', 'total_visitors': 'Total Visitors'},
+        title="Visitor Traffic Trends",
         height=350
     )
     
-    # Add trend line
+    # Add trend line with enhanced styling
     x = np.array(range(len(daily_visitors)))
     y = daily_visitors['total_visitors'].values
     
@@ -169,14 +178,69 @@ def show_visitor_trends(daily_traffic):
             y=p(x),
             mode='lines',
             name='Trend',
-            line=dict(color='red', dash='dash')
+            line=dict(
+                color=SCENEIQ_COLORS['accent'],
+                width=3,
+                dash='dot',
+                shape='spline',
+                smoothing=1.3
+            ),
+            opacity=0.8
         ))
     
+    # Add range selector for interactive time filtering
     fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        xaxis_title="",
-        yaxis_title="Visitor Count"
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=7, label="1w", step="day", stepmode="backward"),
+                    dict(count=1, label="1m", step="month", stepmode="backward"),
+                    dict(count=3, label="3m", step="month", stepmode="backward"),
+                    dict(step="all")
+                ]),
+                bgcolor="#F9F9F9",
+                font=dict(color="#666666"),
+                borderwidth=1,
+                bordercolor="#DDDDDD",
+                y=-0.15,
+            ),
+            rangeslider=dict(visible=True, thickness=0.05),
+            type="date"
+        )
     )
+    
+    # Mark weekends with different background if we have enough data
+    if len(daily_visitors) > 7:
+        for date in daily_visitors['date']:
+            if pd.to_datetime(date).weekday() >= 5:  # Weekend (5=Saturday, 6=Sunday)
+                fig.add_vrect(
+                    x0=date, x1=date,
+                    fillcolor="rgba(230, 230, 230, 0.3)",
+                    layer="below", line_width=0,
+                )
+    
+    # Add peak traffic annotation if we have enough data
+    if len(daily_visitors) > 7:
+        # Find day with highest traffic
+        peak_day = daily_visitors.sort_values('total_visitors', ascending=False).iloc[0]
+        
+        fig.add_annotation(
+            x=peak_day['date'],
+            y=peak_day['total_visitors'],
+            text=f"Peak Traffic<br>{peak_day['total_visitors']} visitors",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor=SCENEIQ_COLORS['primary'],
+            ax=-40,
+            ay=-40,
+            bgcolor="rgba(255, 255, 255, 0.8)",
+            bordercolor=SCENEIQ_COLORS['primary'],
+            borderwidth=1,
+            borderpad=4,
+            font=dict(color="#333333", size=12)
+        )
     
     st.plotly_chart(fig, use_container_width=True)
     
@@ -192,21 +256,59 @@ def show_visitor_trends(daily_traffic):
     # Aggregate by day of week
     day_traffic = daily_traffic.groupby('day_of_week')['total_visitors'].mean().reindex(day_order).reset_index()
     
-    # Create bar chart
-    fig = px.bar(
-        day_traffic,
+    # Create premium styled bar chart
+    fig = create_bar_chart(
+        df=day_traffic,
         x='day_of_week',
         y='total_visitors',
-        labels={'day_of_week': 'Day of Week', 'total_visitors': 'Average Visitors'},
-        color='total_visitors',
-        color_continuous_scale='Blues',
-        height=300
+        title="Average Visitors by Day of Week",
+        height=320
     )
     
-    fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        coloraxis_showscale=False,
-        xaxis_title=""
+    # Apply custom color gradient
+    blues = [
+        "#E3F2FD", "#BBDEFB", "#90CAF9", "#64B5F6", 
+        "#42A5F5", "#2196F3", "#1E88E5", "#1976D2"
+    ]
+    
+    # Highlight weekends with different colors
+    bar_colors = []
+    for day in day_order:
+        if day in ['Saturday', 'Sunday']:
+            bar_colors.append(SCENEIQ_COLORS['secondary'])  # Weekend color
+        else:
+            bar_colors.append(SCENEIQ_COLORS['primary'])    # Weekday color
+    
+    fig.update_traces(
+        marker_color=bar_colors,
+        width=0.6  # Thinner bars
+    )
+    
+    # Add value labels on top of each bar
+    for i, value in enumerate(day_traffic['total_visitors']):
+        fig.add_annotation(
+            x=i,
+            y=value + (max(day_traffic['total_visitors']) * 0.03),  # Slightly above bar
+            text=f"{int(value)}",
+            showarrow=False,
+            font=dict(color="#555555", size=11)
+        )
+    
+    # Add weekend/weekday shading
+    fig.add_vrect(
+        x0=-0.5, x1=4.5,  # Monday-Friday
+        fillcolor="rgba(240, 240, 255, 0.2)",
+        layer="below", line_width=0,
+        annotation_text="Weekdays",
+        annotation_position="top left"
+    )
+    
+    fig.add_vrect(
+        x0=4.5, x1=6.5,  # Saturday-Sunday
+        fillcolor="rgba(255, 230, 230, 0.2)",
+        layer="below", line_width=0,
+        annotation_text="Weekend",
+        annotation_position="top right"
     )
     
     st.plotly_chart(fig, use_container_width=True)
