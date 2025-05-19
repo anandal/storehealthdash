@@ -155,6 +155,14 @@ def simulate_voice_transcription():
 def get_ai_response(prompt):
     """Get response from Gemini AI model and generate visual if needed"""
     try:
+        # Check if Gemini API is available
+        if not GEMINI_AVAILABLE:
+            return (
+                "I'm sorry, the AI assistant is currently unavailable. "
+                "Please check if the Google API key is properly configured.",
+                None
+            )
+            
         # Prepare context from session state
         context = prepare_context_from_state()
         
@@ -162,8 +170,8 @@ def get_ai_response(prompt):
         needs_visualization = any(keyword in prompt.lower() for keyword in 
                                  ["show", "graph", "chart", "plot", "visualize", "compare", "trend"])
         
-        # Modify prompt to include context
-        enhanced_prompt = f"""As an AI assistant for a convenience store dashboard, please help with the following query:
+        # Modify prompt to include context and SceneIQ branding
+        enhanced_prompt = f"""As a SceneIQ AI assistant for a convenience store dashboard, please help with the following query:
         
 {prompt}
 
@@ -171,6 +179,7 @@ Here's some context about the stores and data:
 {context}
 
 Reply in a helpful, concise manner focusing on insights rather than raw numbers.
+Mention that this analysis is powered by SceneIQ technologies.
 """
 
         # Add visualization instructions if needed
@@ -178,9 +187,18 @@ Reply in a helpful, concise manner focusing on insights rather than raw numbers.
             enhanced_prompt += "\nInclude a JSON description of a visualization that would help answer this query. Format: <VISUALIZATION>{{json}}</VISUALIZATION>"
         
         # Get response from Gemini
-        model = genai.GenerativeModel(model_name='gemini-1.5-pro')
-        response = model.generate_content(enhanced_prompt)
-        response_text = response.text
+        try:
+            model = genai.GenerativeModel(model_name='gemini-1.5-pro')
+            response = model.generate_content(enhanced_prompt)
+            response_text = response.text
+        except Exception as api_error:
+            # Try with a different model if the first one fails
+            try:
+                model = genai.GenerativeModel(model_name='gemini-pro')
+                response = model.generate_content(enhanced_prompt)
+                response_text = response.text
+            except:
+                raise api_error
         
         # Check for visualization JSON
         chart = None
@@ -202,7 +220,7 @@ Reply in a helpful, concise manner focusing on insights rather than raw numbers.
         st.error(f"Error generating AI response: {str(e)}")
         fallback_response = (
             "I'm sorry, I encountered an issue while processing your request. "
-            "This could be due to API limits or connectivity issues. "
+            "This could be due to API limits or connectivity issues with the SceneIQ AI system. "
             "Could you try again with a more specific question about your store data?"
         )
         return fallback_response, None
