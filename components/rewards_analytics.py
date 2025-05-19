@@ -8,6 +8,14 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from components.chart_styles import (
+    apply_premium_styling,
+    create_bar_chart,
+    create_line_chart,
+    create_pie_chart,
+    create_area_chart,
+    SCENEIQ_COLORS
+)
 
 def show_rewards_analytics():
     """Display rewards program analytics dashboard"""
@@ -114,20 +122,70 @@ def show_member_growth(rewards_data):
     # Aggregate total members by date across all stores
     daily_members = rewards_data.groupby('date')['total_members'].sum().reset_index()
     
-    # Create line chart
-    fig = px.line(
-        daily_members,
+    # Create premium styled area chart for member growth
+    fig = create_area_chart(
+        df=daily_members,
         x='date',
         y='total_members',
-        labels={'date': 'Date', 'total_members': 'Total Members'},
-        height=250
+        title="Rewards Program Membership Growth",
+        height=320,
+        color=SCENEIQ_COLORS['primary']
     )
     
+    # Add range selector for interactive time filtering
     fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        xaxis_title="",
-        yaxis_title="Members"
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=7, label="1w", step="day", stepmode="backward"),
+                    dict(count=1, label="1m", step="month", stepmode="backward"),
+                    dict(count=3, label="3m", step="month", stepmode="backward"),
+                    dict(step="all")
+                ]),
+                bgcolor="#F9F9F9",
+                font=dict(color="#666666"),
+                borderwidth=1,
+                bordercolor="#DDDDDD",
+                y=-0.15,
+            ),
+            rangeslider=dict(visible=True, thickness=0.05),
+            type="date"
+        )
     )
+    
+    # Add current membership annotation
+    latest_date = daily_members['date'].max()
+    current_members = daily_members[daily_members['date'] == latest_date]['total_members'].values[0]
+    
+    fig.add_annotation(
+        x=latest_date,
+        y=current_members,
+        text=f"Current: {int(current_members):,} members",
+        showarrow=True,
+        arrowhead=2,
+        arrowsize=1,
+        arrowwidth=2,
+        arrowcolor=SCENEIQ_COLORS['primary'],
+        ax=40,
+        ay=-40,
+        bgcolor="rgba(255, 255, 255, 0.8)",
+        bordercolor=SCENEIQ_COLORS['primary'],
+        borderwidth=1,
+        borderpad=4,
+        font=dict(color="#333333", size=12)
+    )
+    
+    # Calculate and display growth percentage
+    if len(daily_members) > 1:
+        oldest_date = daily_members['date'].min()
+        oldest_members = daily_members[daily_members['date'] == oldest_date]['total_members'].values[0]
+        growth_pct = ((current_members - oldest_members) / oldest_members) * 100
+        
+        st.metric(
+            "Membership Growth", 
+            f"{int(current_members):,} members", 
+            f"{growth_pct:.1f}%"
+        )
     
     st.plotly_chart(fig, use_container_width=True)
 
@@ -157,22 +215,53 @@ def show_campaign_performance(campaign_data):
     campaign_summary = campaign_data.groupby('campaign')[column].mean().reset_index()
     campaign_summary = campaign_summary.sort_values(column, ascending=False)
     
-    # Create bar chart
-    fig = px.bar(
-        campaign_summary,
+    # Create premium styled bar chart
+    fig = create_bar_chart(
+        df=campaign_summary,
         x='campaign',
         y=column,
-        color=column,
-        color_continuous_scale='Blues',
-        labels={'campaign': 'Campaign', column: view_option},
-        height=300
+        title=f"Campaign Performance by {view_option}",
+        height=350
     )
     
-    fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        coloraxis_showscale=False,
-        xaxis_title=""
+    # Custom color gradient based on performance
+    color_scale = px.colors.sequential.Purples
+    
+    # Update with premium styling
+    fig.update_traces(
+        marker=dict(
+            color=campaign_summary[column],
+            colorscale=color_scale,
+            cmin=0,
+            cmax=campaign_summary[column].max() * 1.1  # Add some headroom
+        ),
+        width=0.6  # Thinner bars
     )
+    
+    # Format y-axis as percentage if applicable and add value labels
+    for i, value in enumerate(campaign_summary[column]):
+        text = f"{value:.1%}" if column != 'roi' else f"${value:.2f}"
+        fig.add_annotation(
+            x=i,
+            y=value + (max(campaign_summary[column]) * 0.03),  # Slightly above bar
+            text=text,
+            showarrow=False,
+            font=dict(color="#555555", size=11)
+        )
+    
+    # Set proper y-axis format
+    if column != 'roi':
+        fig.update_layout(yaxis_tickformat='.0%')
+    else:
+        fig.update_layout(yaxis_tickformat='$,.2f')
+    
+    # Add insights
+    if not campaign_summary.empty:
+        top_campaign = campaign_summary.iloc[0]['campaign']
+        top_value = campaign_summary.iloc[0][column]
+        value_text = f"{top_value:.1%}" if column != 'roi' else f"${top_value:.2f}"
+        
+        st.info(f"💡 **Insight**: '{top_campaign}' is your top performing campaign with a {view_option.lower()} of {value_text}")
     
     st.plotly_chart(fig, use_container_width=True)
     
