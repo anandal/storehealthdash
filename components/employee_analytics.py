@@ -8,6 +8,14 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from components.chart_styles import (
+    apply_premium_styling,
+    create_bar_chart, 
+    create_line_chart,
+    create_pie_chart,
+    create_heatmap,
+    SCENEIQ_COLORS
+)
 
 def show_employee_analytics():
     """Display employee productivity and compliance dashboard"""
@@ -144,46 +152,140 @@ def show_usage_trends(shift_data):
         avg_duration=('avg_duration_minutes', 'mean')
     ).reset_index()
     
-    # Create line chart with dual y-axis
+    # Create premium styled figure with dual y-axis
     fig = go.Figure()
     
-    # Add incidents line
+    # Add incidents line with premium styling
     fig.add_trace(go.Scatter(
         x=daily_usage['date'],
         y=daily_usage['incidents'],
         name='Total Incidents',
-        line=dict(color='crimson', width=3)
+        line=dict(
+            color=SCENEIQ_COLORS['secondary'],
+            width=3,
+            shape='spline',
+            smoothing=1.3
+        ),
+        mode='lines+markers',
+        marker=dict(
+            size=8,
+            color=SCENEIQ_COLORS['secondary'],
+            line=dict(width=1, color='white')
+        )
     ))
     
-    # Add duration line
+    # Add duration line with premium styling
     fig.add_trace(go.Scatter(
         x=daily_usage['date'],
         y=daily_usage['avg_duration'],
         name='Avg. Duration (min)',
-        line=dict(color='royalblue', width=2, dash='dash'),
+        line=dict(
+            color=SCENEIQ_COLORS['primary'],
+            width=3,
+            shape='spline',
+            smoothing=1.3
+        ),
+        mode='lines+markers',
+        marker=dict(
+            size=8,
+            color=SCENEIQ_COLORS['primary'],
+            line=dict(width=1, color='white')
+        ),
         yaxis='y2'
     ))
     
-    # Update layout for dual y-axes
+    # Apply premium styling
+    fig = apply_premium_styling(
+        fig,
+        title="Mobile Usage Trends Over Time",
+        height=370
+    )
+    
+    # Add range selector for interactive time filtering
     fig.update_layout(
-        height=350,
-        margin=dict(l=0, r=0, t=10, b=0),
-        xaxis=dict(title=""),
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=7, label="1w", step="day", stepmode="backward"),
+                    dict(count=1, label="1m", step="month", stepmode="backward"),
+                    dict(count=3, label="3m", step="month", stepmode="backward"),
+                    dict(step="all")
+                ]),
+                bgcolor="#F9F9F9",
+                font=dict(color="#666666"),
+                borderwidth=1,
+                bordercolor="#DDDDDD",
+                y=-0.15,
+            ),
+            rangeslider=dict(visible=True, thickness=0.05),
+            type="date"
+        ),
         yaxis=dict(
             title="Total Incidents",
-            title_font=dict(color='crimson'),
-            tickfont=dict(color='crimson')
+            title_font=dict(color=SCENEIQ_COLORS['secondary']),
+            tickfont=dict(color=SCENEIQ_COLORS['secondary']),
+            gridcolor='rgba(220, 220, 220, 0.5)'
         ),
         yaxis2=dict(
             title="Avg. Duration (min)",
-            title_font=dict(color='royalblue'),
-            tickfont=dict(color='royalblue'),
+            title_font=dict(color=SCENEIQ_COLORS['primary']),
+            tickfont=dict(color=SCENEIQ_COLORS['primary']),
             anchor="x",
             overlaying="y",
-            side="right"
+            side="right",
+            gridcolor='rgba(220, 220, 220, 0.5)'
         ),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
     )
+    
+    # Mark weekends with different background if we have enough data
+    if len(daily_usage) > 7:
+        for date in daily_usage['date']:
+            if pd.to_datetime(date).weekday() >= 5:  # Weekend (5=Saturday, 6=Sunday)
+                fig.add_vrect(
+                    x0=date, x1=date,
+                    fillcolor="rgba(230, 230, 230, 0.3)",
+                    layer="below", line_width=0,
+                )
+    
+    # Add annotations for highest and lowest points
+    if not daily_usage.empty and len(daily_usage) > 1:
+        max_incidents = daily_usage.loc[daily_usage['incidents'].idxmax()]
+        min_incidents = daily_usage.loc[daily_usage['incidents'].idxmin()]
+        
+        # Annotate max point
+        fig.add_annotation(
+            x=max_incidents['date'],
+            y=max_incidents['incidents'],
+            text=f"Peak: {int(max_incidents['incidents'])}",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor=SCENEIQ_COLORS['secondary'],
+            ax=-30,
+            ay=-30
+        )
+        
+        # Annotate min point
+        fig.add_annotation(
+            x=min_incidents['date'],
+            y=min_incidents['incidents'],
+            text=f"Low: {int(min_incidents['incidents'])}",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor=SCENEIQ_COLORS['secondary'],
+            ax=30,
+            ay=-30
+        )
     
     st.plotly_chart(fig, use_container_width=True)
     
@@ -199,22 +301,63 @@ def show_usage_trends(shift_data):
     # Aggregate by day of week
     day_usage = shift_data.groupby('day_of_week')['mobile_usage_incidents'].mean().reindex(day_order).reset_index()
     
-    # Create bar chart
-    fig = px.bar(
-        day_usage,
+    # Create premium styled bar chart
+    fig = create_bar_chart(
+        df=day_usage,
         x='day_of_week',
         y='mobile_usage_incidents',
-        labels={'day_of_week': 'Day of Week', 'mobile_usage_incidents': 'Average Incidents'},
-        color='mobile_usage_incidents',
-        color_continuous_scale='Reds',
-        height=300
+        title="Mobile Usage by Day of Week",
+        height=320
     )
     
-    fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        coloraxis_showscale=False,
-        xaxis_title=""
+    # Highlight weekends with different colors
+    bar_colors = []
+    for day in day_order:
+        if day in ['Saturday', 'Sunday']:
+            bar_colors.append(SCENEIQ_COLORS['secondary'])  # Weekend color
+        else:
+            bar_colors.append(SCENEIQ_COLORS['primary'])    # Weekday color
+    
+    fig.update_traces(
+        marker_color=bar_colors,
+        width=0.6  # Thinner bars
     )
+    
+    # Add value labels on top of each bar
+    for i, value in enumerate(day_usage['mobile_usage_incidents']):
+        fig.add_annotation(
+            x=i,
+            y=value + (max(day_usage['mobile_usage_incidents']) * 0.03),  # Slightly above bar
+            text=f"{value:.1f}",
+            showarrow=False,
+            font=dict(color="#555555", size=11)
+        )
+    
+    # Add weekend/weekday shading
+    fig.add_vrect(
+        x0=-0.5, x1=4.5,  # Monday-Friday
+        fillcolor="rgba(240, 240, 255, 0.2)",
+        layer="below", line_width=0,
+        annotation_text="Weekdays",
+        annotation_position="top left"
+    )
+    
+    fig.add_vrect(
+        x0=4.5, x1=6.5,  # Saturday-Sunday
+        fillcolor="rgba(255, 230, 230, 0.2)",
+        layer="below", line_width=0,
+        annotation_text="Weekend",
+        annotation_position="top right"
+    )
+    
+    # Add insights about patterns
+    weekday_avg = day_usage[day_usage['day_of_week'].isin(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])]['mobile_usage_incidents'].mean()
+    weekend_avg = day_usage[day_usage['day_of_week'].isin(['Saturday', 'Sunday'])]['mobile_usage_incidents'].mean()
+    
+    if weekend_avg > weekday_avg:
+        st.info("📱 **Insight**: Mobile usage is higher on weekends compared to weekdays. Consider adjusting staffing or policies accordingly.")
+    else:
+        st.info("📱 **Insight**: Mobile usage is higher on weekdays. Focus compliance training on your busiest days.")
     
     st.plotly_chart(fig, use_container_width=True)
 
