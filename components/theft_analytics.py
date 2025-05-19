@@ -8,6 +8,14 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+from components.chart_styles import (
+    apply_premium_styling,
+    create_bar_chart,
+    create_line_chart,
+    create_pie_chart,
+    create_heatmap,
+    SCENEIQ_COLORS
+)
 
 def show_theft_analytics():
     """Display theft analytics dashboard"""
@@ -98,21 +106,42 @@ def show_severity_breakdown(theft_data):
     severity_counts = theft_data['severity'].value_counts().reset_index()
     severity_counts.columns = ['Severity', 'Count']
     
-    # Create pie chart
-    colors = {'Low': '#FFDC00', 'Medium': '#FF851B', 'High': '#FF4136'}
-    
-    fig = px.pie(
-        severity_counts,
+    # Create premium styled donut chart
+    fig = create_pie_chart(
+        df=severity_counts,
         names='Severity',
         values='Count',
-        color='Severity',
-        color_discrete_map=colors,
-        hole=0.4
+        title="Theft Incidents by Severity",
+        height=350
     )
     
-    fig.update_layout(
-        margin=dict(l=10, r=10, t=10, b=10),
-        legend=dict(orientation="h", yanchor="bottom", y=0, xanchor="center", x=0.5)
+    # Apply custom colors for severity levels
+    custom_colors = {
+        'High': '#FF4136',   # Red for High
+        'Medium': '#FF851B', # Orange for Medium
+        'Low': '#FFDC00'     # Yellow for Low
+    }
+    
+    # Get colors in correct order based on the severity values in the data
+    colors = [custom_colors.get(sev, SCENEIQ_COLORS['primary']) for sev in severity_counts['Severity']]
+    
+    # Update with custom styling
+    fig.update_traces(
+        marker=dict(colors=colors),
+        hole=0.5,  # Make a donut chart with larger hole
+        textposition='inside',
+        textinfo='percent+label',
+        insidetextfont=dict(color='white', size=12),
+        pull=[0.05 if sev == 'High' else 0 for sev in severity_counts['Severity']]  # Pull out high severity slice
+    )
+    
+    # Add a count label in the center
+    total_thefts = severity_counts['Count'].sum()
+    fig.add_annotation(
+        text=f"<b>{total_thefts}</b><br>incidents",
+        x=0.5, y=0.5,
+        font=dict(size=16, color="#333333"),
+        showarrow=False
     )
     
     st.plotly_chart(fig, use_container_width=True)
@@ -123,16 +152,16 @@ def show_theft_trends(theft_data):
     theft_data['date'] = theft_data['timestamp'].dt.date
     daily_thefts = theft_data.groupby('date').size().reset_index(name='incidents')
     
-    # Create line chart
-    fig = px.line(
-        daily_thefts,
+    # Create premium styled line chart
+    fig = create_line_chart(
+        df=daily_thefts,
         x='date',
         y='incidents',
-        labels={'date': 'Date', 'incidents': 'Number of Incidents'},
+        title="Theft Incidents Over Time",
         height=350
     )
     
-    # Add trend line
+    # Add trend line with enhanced styling
     x = np.array(range(len(daily_thefts)))
     y = daily_thefts['incidents'].values
     
@@ -145,14 +174,44 @@ def show_theft_trends(theft_data):
             y=p(x),
             mode='lines',
             name='Trend',
-            line=dict(color='red', dash='dash')
+            line=dict(
+                color='rgba(255, 65, 54, 0.7)',  # Semi-transparent red
+                width=3,
+                dash='dot',
+                shape='spline'
+            )
         ))
     
+    # Add range selector for interactive time filtering
     fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        xaxis_title="",
-        yaxis_title="Incident Count"
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=7, label="1w", step="day", stepmode="backward"),
+                    dict(count=1, label="1m", step="month", stepmode="backward"),
+                    dict(count=3, label="3m", step="month", stepmode="backward"),
+                    dict(step="all")
+                ]),
+                bgcolor="#F9F9F9",
+                font=dict(color="#666666"),
+                borderwidth=1,
+                bordercolor="#DDDDDD",
+                y=-0.15,
+            ),
+            rangeslider=dict(visible=True, thickness=0.05),
+            type="date"
+        )
     )
+    
+    # Mark weekends with different background if we have enough data
+    if len(daily_thefts) > 7:
+        for date in daily_thefts['date']:
+            if pd.to_datetime(date).weekday() >= 5:  # Weekend (5=Saturday, 6=Sunday)
+                fig.add_vrect(
+                    x0=date, x1=date,
+                    fillcolor="rgba(230, 230, 230, 0.3)",
+                    layer="below", line_width=0,
+                )
     
     st.plotly_chart(fig, use_container_width=True)
 
@@ -165,46 +224,86 @@ def show_store_comparison(theft_data):
         total_value=('value', 'sum')
     ).reset_index()
     
-    # Create comparison visualization
+    # Create comparison visualization with tabs
     tab1, tab2 = st.tabs(["Incident Count", "Financial Impact"])
     
     with tab1:
-        fig = px.bar(
-            store_thefts,
+        # Create premium styled bar chart
+        fig = create_bar_chart(
+            df=store_thefts,
             x='incidents',
             y='store',
-            orientation='h',
-            labels={'incidents': 'Number of Incidents', 'store': 'Store'},
-            color='incidents',
-            color_continuous_scale=['green', 'yellow', 'red'],
-            height=300
+            title="Theft Incidents by Store",
+            height=350
         )
         
+        # Update with horizontal orientation and color gradient
+        fig.update_traces(
+            orientation='h',
+            marker=dict(
+                color=store_thefts['incidents'],
+                colorscale='RdYlGn_r',  # Reversed Red-Yellow-Green scale
+                cmin=0,
+                cmax=store_thefts['incidents'].max() * 1.2,  # Add some headroom
+            ),
+            width=0.6  # Thinner bars
+        )
+        
+        # Sort bars by value
         fig.update_layout(
-            margin=dict(l=0, r=0, t=10, b=0),
-            coloraxis_showscale=False,
             yaxis={'categoryorder': 'total ascending'}
         )
+        
+        # Add count labels at the end of each bar
+        for i, value in enumerate(store_thefts['incidents']):
+            fig.add_annotation(
+                x=value,
+                y=i,
+                text=f"{value}",
+                showarrow=False,
+                xshift=10,
+                font=dict(color="#333333", size=11)
+            )
         
         st.plotly_chart(fig, use_container_width=True)
     
     with tab2:
-        fig = px.bar(
-            store_thefts,
+        # Create premium styled bar chart for financial impact
+        fig = create_bar_chart(
+            df=store_thefts,
             x='total_value',
             y='store',
-            orientation='h',
-            labels={'total_value': 'Total Value Loss ($)', 'store': 'Store'},
-            color='total_value',
-            color_continuous_scale=['green', 'yellow', 'red'],
-            height=300
+            title="Financial Loss by Store",
+            height=350
         )
         
+        # Update with horizontal orientation and color gradient
+        fig.update_traces(
+            orientation='h',
+            marker=dict(
+                color=store_thefts['total_value'],
+                colorscale='RdYlGn_r',  # Reversed Red-Yellow-Green scale
+                cmin=0,
+                cmax=store_thefts['total_value'].max() * 1.2,  # Add some headroom
+            ),
+            width=0.6  # Thinner bars
+        )
+        
+        # Sort bars by value
         fig.update_layout(
-            margin=dict(l=0, r=0, t=10, b=0),
-            coloraxis_showscale=False,
             yaxis={'categoryorder': 'total ascending'}
         )
+        
+        # Add dollar value labels at the end of each bar
+        for i, value in enumerate(store_thefts['total_value']):
+            fig.add_annotation(
+                x=value,
+                y=i,
+                text=f"${value:.2f}",
+                showarrow=False,
+                xshift=10,
+                font=dict(color="#333333", size=11)
+            )
         
         st.plotly_chart(fig, use_container_width=True)
 
@@ -233,31 +332,84 @@ def show_heatmap_analysis(theft_data):
         # Sort columns to ensure they're in correct order
         pivot_data = pivot_data.sort_index(axis=1)
         
-        # Generate heatmap
-        fig = px.imshow(
-            pivot_data,
-            labels=dict(x="Hour of Day", y="Day of Week", color="Incident Count"),
+        # Create premium styled heatmap
+        fig = create_heatmap(
+            data=pivot_data,
             x=list(range(24)),
             y=day_order,
-            aspect="auto",
-            color_continuous_scale='Reds'
+            title="Theft Incidents by Time & Day",
+            height=450
         )
+        
+        # Add custom time labels
+        hour_labels = [f"{h}:00" if h % 3 == 0 else "" for h in range(24)]
+        
+        # Add business hours annotation
+        fig.add_shape(
+            type="rect",
+            xref="x", yref="paper",
+            x0=8, x1=20,  # Business hours 8am-8pm
+            y0=0, y1=1,
+            line=dict(width=0),
+            fillcolor="rgba(144, 238, 144, 0.1)",  # Light green transparent
+            layer="below"
+        )
+        
+        fig.add_annotation(
+            text="Business Hours",
+            x=14, y=1.05,
+            showarrow=False,
+            font=dict(size=12, color="#555555")
+        )
+        
+        # Update layout for better readability
+        fig.update_layout(
+            xaxis=dict(
+                tickvals=list(range(24)),
+                ticktext=hour_labels,
+                title="Hour of Day"
+            ),
+            yaxis=dict(
+                title="Day of Week"
+            ),
+            coloraxis=dict(
+                colorbar=dict(
+                    title="Incident<br>Count",
+                    thicknessmode="pixels", thickness=20,
+                    lenmode="pixels", len=300,
+                    yanchor="top", y=1,
+                    ticks="outside"
+                ),
+                colorscale='Reds'
+            )
+        )
+        
     except Exception as e:
         st.error(f"Error creating heatmap: {str(e)}")
         # Create an empty figure as fallback
         fig = go.Figure()
         st.warning("Could not display heatmap due to data issue. Please check that there is theft data available for the selected time period and stores.")
     
-    fig.update_layout(
-        height=400,
-        margin=dict(l=10, r=10, t=10, b=10),
-        coloraxis_colorbar=dict(title="Count")
-    )
-    
     st.plotly_chart(fig, use_container_width=True)
     
-    # Insights about the heatmap
-    st.info("📈 **Insights**: The heatmap shows when theft incidents are most likely to occur during the week. Darker colors indicate higher incident frequency.")
+    # Enhanced insights about the heatmap with actionable information
+    st.info("""
+    📈 **Pattern Insights**: 
+    - The heatmap reveals when theft incidents are most likely to occur during the week
+    - Darker color cells indicate times with higher theft frequency
+    - Use this data to optimize security staff scheduling and camera monitoring
+    - Compare patterns against your store traffic data to identify correlation
+    """)
+    
+    # Add user-friendly interpretation tips
+    with st.expander("How to interpret the heatmap"):
+        st.markdown("""
+        - **X-axis**: Hours of the day (24-hour format)
+        - **Y-axis**: Days of the week
+        - **Color intensity**: Number of theft incidents recorded
+        - **Business hours**: Highlighted with a light green background
+        - Look for patterns like weekend vs. weekday differences or specific time blocks with higher incident rates
+        """)
 
 def show_incident_details(theft_data):
     """Show detailed list of incidents with filtering options"""

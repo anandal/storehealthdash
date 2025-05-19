@@ -85,10 +85,23 @@ st.markdown("""
     
     /* Chart container styling */
     div[data-testid="stPlotlyChart"] {
-        border-radius: 10px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         margin-bottom: 25px;
-        padding: 8px;
+        padding: 12px;
+        background: white;
+        overflow: hidden;
+    }
+    
+    /* Chart content styling for curved corners (works with Plotly) */
+    .js-plotly-plot .plotly .main-svg {
+        border-radius: 12px;
+    }
+    
+    /* Style for bars to look more modern */
+    .bar rect {
+        rx: 6px;
+        ry: 6px;
     }
 </style>
 """, unsafe_allow_html=True)

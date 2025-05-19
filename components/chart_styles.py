@@ -84,11 +84,14 @@ def apply_premium_styling(fig, title=None, template='light', gradient=False, hei
     
     # Update layout with premium styling
     fig.update_layout(
-        title=title,
+        title=dict(
+            text=title,
+            font=dict(family="Roboto, Arial, sans-serif", size=20, color="#1E3A8A")
+        ),
         font=tpl['font'],
         paper_bgcolor=tpl['paper_bgcolor'],
         plot_bgcolor=tpl['plot_bgcolor'],
-        margin=dict(l=20, r=20, t=40, b=20),
+        margin=dict(l=20, r=20, t=50, b=20),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -96,12 +99,13 @@ def apply_premium_styling(fig, title=None, template='light', gradient=False, hei
             xanchor="center",
             x=0.5,
             bgcolor='rgba(255,255,255,0.8)' if template == 'light' else 'rgba(32,33,36,0.8)',
-            bordercolor='rgba(0,0,0,0)'
+            bordercolor='rgba(0,0,0,0)',
+            font=dict(size=12)
         ),
         height=height
     )
     
-    # Add drop shadow effect
+    # Add curved borders to the chart container (requires CSS in the main app.py)
     fig.update_layout(
         shapes=[
             dict(
@@ -125,7 +129,8 @@ def apply_premium_styling(fig, title=None, template='light', gradient=False, hei
         zerolinecolor=tpl['zerolinecolor'],
         showline=True,
         linewidth=1,
-        linecolor=tpl['linecolor']
+        linecolor=tpl['linecolor'],
+        tickfont=dict(size=10)
     )
     
     fig.update_yaxes(
@@ -137,7 +142,8 @@ def apply_premium_styling(fig, title=None, template='light', gradient=False, hei
         zerolinecolor=tpl['zerolinecolor'],
         showline=True,
         linewidth=1,
-        linecolor=tpl['linecolor']
+        linecolor=tpl['linecolor'],
+        tickfont=dict(size=10)
     )
     
     # Apply gradient colors if requested
@@ -161,6 +167,31 @@ def apply_premium_styling(fig, title=None, template='light', gradient=False, hei
                     trace.marker.color = gradient_colors[i % len(gradient_colors)]
                 if hasattr(trace, 'line'):
                     trace.line.color = gradient_colors[i % len(gradient_colors)]
+    
+    # Apply uniform bar styling if this is a bar chart
+    for trace in fig.data:
+        if hasattr(trace, 'type') and trace.type == 'bar':
+            # Make bars slimmer with rounded edges
+            if not hasattr(trace, 'width') or trace.width is None:
+                trace.width = 0.6  # Thinner bars
+            
+            # Add rounded corners to bars
+            if hasattr(trace, 'marker'):
+                if not hasattr(trace.marker, 'line'):
+                    trace.marker.line = dict()
+                trace.marker.line.width = 0
+                
+        # Enhance line charts with smoother curves and rounded line caps
+        elif hasattr(trace, 'type') and trace.type in ['scatter', 'scattergl']:
+            if trace.mode and 'lines' in trace.mode:
+                if not hasattr(trace, 'line'):
+                    trace.line = dict()
+                trace.line.shape = 'spline'  # Smooth curves
+                trace.line.smoothing = 1.3   # Extra smoothing
+                
+                # Thicker lines for better visibility
+                if not hasattr(trace.line, 'width') or trace.line.width < 2:
+                    trace.line.width = 2.5
     
     return fig
 
