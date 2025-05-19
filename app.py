@@ -63,8 +63,8 @@ else:
     # Main application layout
     col1, col2, col3 = st.columns([1, 3, 1])
     with col2:
-        st.title("Convenience Store Health Dashboard")
-        st.caption("Multi-store performance analytics and business intelligence")
+        st.title("SceneIQ™ Store Health Dashboard")
+        st.caption("Multi-store performance analytics and business intelligence by SceneIQ")
 
     # User role indicator and logout button
     col_role, col_logout = st.sidebar.columns([3, 1])
@@ -130,32 +130,66 @@ else:
         )
         st.session_state.selected_stores = [st.session_state.selected_store]
 
-    # Module navigation
-    st.sidebar.header("Dashboard Modules")
-    
     # Define available modules based on user role
     if st.session_state.user_role == "Owner":
         modules = [
-            "Global Command Center",
-            "Theft Analytics",
-            "Rewards Program Analytics",
-            "Store Visit & Traffic Analytics",
-            "Employee Productivity",
-            "AI Assistant",
-            "Database Admin"  # Only owners can access database admin
+            {"name": "Global Command Center", "icon": "🌐", "desc": "Overview of all store metrics"},
+            {"name": "Theft Analytics", "icon": "🚨", "desc": "Monitor theft incidents across stores"},
+            {"name": "Rewards Program Analytics", "icon": "🎁", "desc": "Track rewards program performance"},
+            {"name": "Store Visit & Traffic Analytics", "icon": "👥", "desc": "Analyze customer traffic patterns"},
+            {"name": "Employee Productivity", "icon": "📱", "desc": "Monitor employee mobile usage"},
+            {"name": "AI Assistant", "icon": "🤖", "desc": "Get insights from your data"},
+            {"name": "Database Admin", "icon": "⚙️", "desc": "Manage database settings"}  # Only owners can access database admin
         ]
     else:
         modules = [
-            "Global Command Center",
-            "Theft Analytics",
-            "Rewards Program Analytics",
-            "Store Visit & Traffic Analytics",
-            "Employee Productivity",
-            "AI Assistant"
+            {"name": "Global Command Center", "icon": "🌐", "desc": "Overview of all store metrics"},
+            {"name": "Theft Analytics", "icon": "🚨", "desc": "Monitor theft incidents across stores"},
+            {"name": "Rewards Program Analytics", "icon": "🎁", "desc": "Track rewards program performance"},
+            {"name": "Store Visit & Traffic Analytics", "icon": "👥", "desc": "Analyze customer traffic patterns"},
+            {"name": "Employee Productivity", "icon": "📱", "desc": "Monitor employee mobile usage"},
+            {"name": "AI Assistant", "icon": "🤖", "desc": "Get insights from your data"}
         ]
     
-    selected_module = st.sidebar.radio("Select Module", modules)
-    st.session_state.active_module = selected_module
+    # Module navigation - visual selector instead of sidebar radio
+    st.sidebar.header("SceneIQ Dashboard Modules")
+    
+    # User can toggle between compact and detailed view
+    if 'compact_nav' not in st.session_state:
+        st.session_state.compact_nav = False
+        
+    st.sidebar.caption("Click to switch navigation style:")
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        if st.button("Compact View", use_container_width=True):
+            st.session_state.compact_nav = True
+            st.rerun()
+    with col2:
+        if st.button("Detailed View", use_container_width=True):
+            st.session_state.compact_nav = False
+            st.rerun()
+    
+    # Select module based on navigation style
+    if st.session_state.compact_nav:
+        # Compact navigation with icons only
+        cols = st.sidebar.columns(len(modules))
+        for i, col in enumerate(cols):
+            with col:
+                if st.button(modules[i]["icon"], help=modules[i]["name"], use_container_width=True):
+                    st.session_state.active_module = modules[i]["name"]
+                    st.rerun()
+    else:
+        # Detailed navigation with cards
+        for module in modules:
+            module_card = f"### {module['icon']} {module['name']}\n{module['desc']}"
+            if st.sidebar.button(module_card, use_container_width=True):
+                st.session_state.active_module = module["name"]
+                st.rerun()
+    
+    # Show currently active module
+    st.sidebar.markdown(f"**Current Module:** {st.session_state.active_module}")
+    
+    selected_module = st.session_state.active_module
 
     # Display the export options
     st.sidebar.header("Export Options")

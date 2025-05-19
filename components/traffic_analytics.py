@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 def show_traffic_analytics():
     """Display store visit and traffic analytics dashboard"""
-    st.header("Store Visit & Traffic Analytics")
+    st.header("SceneIQ™ Store Visit & Traffic Analytics")
     
     # Get filtered data based on selected stores and date range
     traffic_patterns = get_filtered_traffic_patterns()

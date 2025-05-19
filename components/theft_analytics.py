@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 def show_theft_analytics():
     """Display theft analytics dashboard"""
-    st.header("Theft Analytics")
+    st.header("SceneIQ™ Theft Analytics")
     
     # Get filtered data based on selected stores and date range
     theft_data = get_filtered_theft_data()

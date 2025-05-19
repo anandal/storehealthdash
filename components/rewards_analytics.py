@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 def show_rewards_analytics():
     """Display rewards program analytics dashboard"""
-    st.header("Rewards Program Analytics")
+    st.header("SceneIQ™ Rewards Program Analytics")
     
     # Get filtered data based on selected stores and date range
     rewards_data = get_filtered_rewards_data()

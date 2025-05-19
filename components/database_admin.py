@@ -10,7 +10,7 @@ import time
 
 def show_database_admin():
     """Display database administration interface"""
-    st.header("Database Administration")
+    st.header("SceneIQ™ Database Administration")
     
     # Only allow owners to access this page
     if st.session_state.user_role != "Owner":

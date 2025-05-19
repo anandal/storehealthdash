@@ -3,8 +3,6 @@ AI Assistant Module - Provides intelligent assistance through voice and chat
 """
 
 import streamlit as st
-import google.generativeai as genai
-import os
 import pandas as pd
 import base64
 import io
@@ -12,15 +10,24 @@ from datetime import datetime
 import time
 import plotly.express as px
 import plotly.graph_objects as go
+import os
+import json
 
-# Initialize Gemini API with API key
-api_key = os.environ.get("GOOGLE_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
+# Handle Google Generative AI import
+try:
+    import google.generativeai as genai
+    # Initialize Gemini API with API key
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if api_key:
+        genai.configure(api_key=api_key)
+    GEMINI_AVAILABLE = True
+except Exception as e:
+    print(f"Warning: Could not initialize Gemini API: {str(e)}")
+    GEMINI_AVAILABLE = False
 
 def show_ai_assistant():
     """Display AI assistant interface with both voice and chat options"""
-    st.header("AI Store Assistant")
+    st.header("SceneIQ™ AI Store Assistant")
     
     st.markdown("""
     Ask questions about your store data and get instant insights.

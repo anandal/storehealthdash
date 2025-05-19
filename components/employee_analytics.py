@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 def show_employee_analytics():
     """Display employee productivity and compliance dashboard"""
-    st.header("Employee Productivity & Compliance")
+    st.header("SceneIQ™ Employee Productivity & Compliance")
     
     # Get filtered data based on selected stores and date range
     mobile_patterns = get_filtered_mobile_patterns()

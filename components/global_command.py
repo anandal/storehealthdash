@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 
 def show_global_command():
     """Display the Global Command Center dashboard"""
-    st.header("Global Command Center")
+    st.header("SceneIQ™ Global Command Center")
     
     # Get filtered data based on selected stores and date range
     health_data = get_filtered_health_data()
