@@ -280,12 +280,51 @@ def show_incident_details(theft_data):
     
     st.caption(f"Showing {len(formatted_data)} incidents. Scroll to see more.")
     
-    # Mock video review functionality
+    # Video review functionality
     st.markdown("### Incident Video Review")
-    st.info("In a production environment, this section would allow viewing of video clips from the RTSP stream analysis.")
     
+    # Create a list of sample timestamps for the video clips
+    video_timestamps = [
+        "2025-05-18 14:32:15",
+        "2025-05-17 19:45:22",
+        "2025-05-16 21:12:08",
+        "2025-05-15 18:37:41",
+        "2025-05-14 22:05:19"
+    ]
+    
+    # Display video clip selection
+    selected_clip = st.selectbox(
+        "Select a clip to review:", 
+        video_timestamps,
+        format_func=lambda x: f"Incident on {x}"
+    )
+    
+    # Display a simulated video player
+    st.markdown("#### Video Player")
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        # Show a placeholder for the video player
+        st.image("https://pixabay.com/get/g6eec510558dfa25600ff6660297034967d54f1947969e767b9be106b148e0400f769740e189a96ced3f80e9d3d6e9db1792b2425682f4f180c2103d453ce3d38_1280.jpg", 
+                 caption=f"10-second clip from {selected_clip}")
+    
+    with col2:
+        st.markdown("##### Clip Controls")
+        st.button("▶️ Play")
+        st.button("⏸️ Pause")
+        st.slider("Time", 0, 10, 0)
+        st.download_button("Download Clip", data=b"Sample video data", file_name=f"theft_clip_{selected_clip.replace(' ', '_').replace(':', '')}.mp4", mime="video/mp4")
+    
+    st.markdown("##### Clip Details")
+    st.markdown(f"**Timestamp:** {selected_clip}")
+    st.markdown("**Camera:** Front Entrance")
+    st.markdown("**Duration:** 10 seconds")
+    
+    st.divider()
+    
+    # Export functionality
     col1, col2 = st.columns(2)
     with col1:
-        st.button("View Selected Incident Video", disabled=True)
+        st.download_button("Export All Clips", data=b"Sample video archive", file_name="theft_clips.zip", mime="application/zip")
     with col2:
         st.download_button("Export Incident List", data=formatted_data.to_csv(index=False), file_name="theft_incidents.csv", mime="text/csv")

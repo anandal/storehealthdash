@@ -286,12 +286,12 @@ def show_campaign_engagement(rewards_data):
         xaxis=dict(title=""),
         yaxis=dict(
             title="Engagement Rate (%)",
-            titlefont=dict(color='royalblue'),
+            title_font=dict(color='royalblue'),
             tickfont=dict(color='royalblue')
         ),
         yaxis2=dict(
             title="Active Campaigns",
-            titlefont=dict(color='green'),
+            title_font=dict(color='green'),
             tickfont=dict(color='green'),
             anchor="x",
             overlaying="y",

@@ -171,12 +171,12 @@ def show_usage_trends(shift_data):
         xaxis=dict(title=""),
         yaxis=dict(
             title="Total Incidents",
-            titlefont=dict(color='crimson'),
+            title_font=dict(color='crimson'),
             tickfont=dict(color='crimson')
         ),
         yaxis2=dict(
             title="Avg. Duration (min)",
-            titlefont=dict(color='royalblue'),
+            title_font=dict(color='royalblue'),
             tickfont=dict(color='royalblue'),
             anchor="x",
             overlaying="y",
