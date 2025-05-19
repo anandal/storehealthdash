@@ -18,6 +18,7 @@ from components.utils import (
     show_login_screen
 )
 from components.database_admin import show_database_admin
+from components.ai_assistant import show_ai_assistant
 from data_generator import generate_demo_data
 from assets.store_images import show_store_images
 from database import init_db, save_data_to_db, load_data_from_db
@@ -140,6 +141,7 @@ else:
             "Rewards Program Analytics",
             "Store Visit & Traffic Analytics",
             "Employee Productivity",
+            "AI Assistant",
             "Database Admin"  # Only owners can access database admin
         ]
     else:
@@ -148,7 +150,8 @@ else:
             "Theft Analytics",
             "Rewards Program Analytics",
             "Store Visit & Traffic Analytics",
-            "Employee Productivity"
+            "Employee Productivity",
+            "AI Assistant"
         ]
     
     selected_module = st.sidebar.radio("Select Module", modules)
