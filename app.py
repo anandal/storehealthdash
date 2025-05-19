@@ -25,11 +25,73 @@ from database import init_db, save_data_to_db, load_data_from_db
 
 # Set page configuration
 st.set_page_config(
-    page_title="Convenience Store Health Dashboard",
+    page_title="SceneIQ Store Health Dashboard",
     page_icon="🏪",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Set custom theme with modern colors
+st.markdown("""
+<style>
+    :root {
+        --primary-color: #4285F4;
+        --background-color: #f9f9f9;
+        --secondary-background-color: #ffffff;
+        --text-color: #262730;
+        --font: 'Roboto', sans-serif;
+    }
+    
+    /* Modern card styling */
+    div.stBlock, div.stAlert {
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        padding: 20px;
+        background: white;
+        border: none !important;
+    }
+    
+    /* Button styling */
+    .stButton>button {
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    /* Header styling */
+    h1, h2, h3 {
+        font-weight: 600 !important;
+        color: #1E3A8A !important;
+    }
+    
+    /* Sidebar styling */
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #f0f0f0;
+    }
+    
+    /* Widget label emphasis */
+    .stSelectbox>label, .stSlider>label, .stDateInput>label {
+        font-weight: 500 !important;
+    }
+    
+    /* Improved metric styling */
+    div[data-testid="stMetric"] {
+        background: linear-gradient(to right, #f0f8ff, #ffffff);
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    /* Chart container styling */
+    div[data-testid="stPlotlyChart"] {
+        border-radius: 10px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+        padding: 8px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Initialize session state variables
 if 'initialized' not in st.session_state:
