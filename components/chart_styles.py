@@ -190,8 +190,14 @@ def apply_premium_styling(fig, title=None, template='light', gradient=False, hei
                 trace.line.smoothing = 1.3   # Extra smoothing
                 
                 # Thicker lines for better visibility
-                if not hasattr(trace.line, 'width') or trace.line.width < 2:
-                    trace.line.width = 2.5
+                try:
+                    # Check if line width exists and is less than 2
+                    if not hasattr(trace.line, 'width') or trace.line.width is None or trace.line.width < 2:
+                        trace.line.width = 2.5
+                except (AttributeError, TypeError):
+                    # If there's any error accessing the attribute, just set a default width
+                    if hasattr(trace, 'line'):
+                        trace.line.width = 2.5
     
     return fig
 
