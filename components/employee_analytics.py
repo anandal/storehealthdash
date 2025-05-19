@@ -264,26 +264,40 @@ def show_store_comparison(shift_data):
 
 def show_heatmap_analysis(mobile_patterns):
     """Display heatmap analysis of mobile usage patterns by time and day"""
-    # Get day order for proper sorting
-    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    
-    # Create pivot table for heatmap
-    pivot_data = mobile_patterns.pivot_table(
-        index='day_of_week', 
-        columns='hour', 
-        values='mobile_usage_incidents',
-        aggfunc='mean'
-    ).reindex(day_order)
-    
-    # Generate heatmap
-    fig = px.imshow(
-        pivot_data,
-        labels=dict(x="Hour of Day", y="Day of Week", color="Incidents"),
-        x=list(range(24)),
-        y=day_order,
-        aspect="auto",
-        color_continuous_scale='Reds'
-    )
+    try:
+        # Get day order for proper sorting
+        day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        
+        # Create pivot table for heatmap
+        pivot_data = mobile_patterns.pivot_table(
+            index='day_of_week', 
+            columns='hour', 
+            values='mobile_usage_incidents',
+            aggfunc='mean'
+        ).reindex(day_order)
+        
+        # Ensure all hours are represented (0-23)
+        for hour in range(24):
+            if hour not in pivot_data.columns:
+                pivot_data[hour] = 0
+                
+        # Sort columns to ensure they're in correct order
+        pivot_data = pivot_data.sort_index(axis=1)
+        
+        # Generate heatmap
+        fig = px.imshow(
+            pivot_data,
+            labels=dict(x="Hour of Day", y="Day of Week", color="Incidents"),
+            x=list(range(24)),
+            y=day_order,
+            aspect="auto",
+            color_continuous_scale='Reds'
+        )
+    except Exception as e:
+        st.error(f"Error creating mobile usage heatmap: {str(e)}")
+        # Create an empty figure as fallback
+        fig = go.Figure()
+        st.warning("Could not display mobile usage heatmap. Please check your selected stores and date range.")
     
     fig.update_layout(
         height=400,

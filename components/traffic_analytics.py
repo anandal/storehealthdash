@@ -256,26 +256,40 @@ def show_store_comparison(daily_traffic):
 
 def show_heatmap_analysis(traffic_patterns):
     """Display heatmap analysis of traffic patterns by time and day"""
-    # Get day order for proper sorting
-    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    
-    # Create pivot table for heatmap
-    pivot_data = traffic_patterns.pivot_table(
-        index='day_of_week', 
-        columns='hour', 
-        values='visitor_count',
-        aggfunc='mean'
-    ).reindex(day_order)
-    
-    # Generate heatmap
-    fig = px.imshow(
-        pivot_data,
-        labels=dict(x="Hour of Day", y="Day of Week", color="Visitor Count"),
-        x=list(range(24)),
-        y=day_order,
-        aspect="auto",
-        color_continuous_scale='Blues'
-    )
+    try:
+        # Get day order for proper sorting
+        day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        
+        # Create pivot table for heatmap
+        pivot_data = traffic_patterns.pivot_table(
+            index='day_of_week', 
+            columns='hour', 
+            values='visitor_count',
+            aggfunc='mean'
+        ).reindex(day_order)
+        
+        # Ensure all hours are represented (0-23)
+        for hour in range(24):
+            if hour not in pivot_data.columns:
+                pivot_data[hour] = 0
+        
+        # Sort columns to ensure they're in correct order
+        pivot_data = pivot_data.sort_index(axis=1)
+        
+        # Generate heatmap
+        fig = px.imshow(
+            pivot_data,
+            labels=dict(x="Hour of Day", y="Day of Week", color="Visitor Count"),
+            x=list(range(24)),
+            y=day_order,
+            aspect="auto",
+            color_continuous_scale='Blues'
+        )
+    except Exception as e:
+        st.error(f"Error creating traffic heatmap: {str(e)}")
+        # Create an empty figure as fallback
+        fig = go.Figure()
+        st.warning("Could not display traffic heatmap due to data issue. Please check your selected store filters.")
     
     fig.update_layout(
         height=400,
@@ -330,138 +344,155 @@ def show_combined_analysis():
     """Show combined analysis of traffic patterns and theft incidents"""
     st.markdown("### Traffic and Theft Correlation Analysis")
     
-    if 'theft_data' not in st.session_state:
-        st.warning("Theft data is not available for comparison.")
-        return
-    
-    # Get filtered data
-    theft_data = st.session_state.theft_data.copy()
-    traffic_patterns = st.session_state.traffic_patterns.copy()
-    
-    # Filter by selected stores
-    if st.session_state.selected_stores:
-        theft_data = theft_data[theft_data['store'].isin(st.session_state.selected_stores)]
-        traffic_patterns = traffic_patterns[traffic_patterns['store'].isin(st.session_state.selected_stores)]
-    
-    if theft_data.empty or traffic_patterns.empty:
-        st.warning("Insufficient data for correlation analysis.")
-        return
-    
-    # Prepare theft data for heatmap
-    theft_data['hour'] = theft_data['timestamp'].dt.hour
-    theft_data['day_of_week'] = theft_data['timestamp'].dt.day_name()
-    
-    # Aggregate theft data by day and hour
-    theft_heatmap = theft_data.groupby(['day_of_week', 'hour']).size().reset_index(name='incidents')
-    
-    # Day order for proper sorting
-    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    
-    # Create pivot tables for both heatmaps
-    theft_pivot = theft_heatmap.pivot_table(
-        index='day_of_week', 
-        columns='hour', 
-        values='incidents',
-        aggfunc='sum'
-    ).reindex(day_order).fillna(0)
-    
-    traffic_pivot = traffic_patterns.pivot_table(
-        index='day_of_week', 
-        columns='hour', 
-        values='visitor_count',
-        aggfunc='mean'
-    ).reindex(day_order)
-    
-    # Create tabs for different views
-    tab1, tab2 = st.tabs(["Heatmap Comparison", "Correlation Analysis"])
-    
-    with tab1:
-        col1, col2 = st.columns(2)
+    try:
+        if 'theft_data' not in st.session_state:
+            st.warning("Theft data is not available for comparison.")
+            return
         
-        with col1:
-            st.markdown("#### Traffic Pattern")
+        # Get filtered data
+        theft_data = st.session_state.theft_data.copy()
+        traffic_patterns = st.session_state.traffic_patterns.copy()
+        
+        # Filter by selected stores
+        if st.session_state.selected_stores:
+            theft_data = theft_data[theft_data['store'].isin(st.session_state.selected_stores)]
+            traffic_patterns = traffic_patterns[traffic_patterns['store'].isin(st.session_state.selected_stores)]
+        
+        if theft_data.empty or traffic_patterns.empty:
+            st.warning("Insufficient data for correlation analysis.")
+            return
+        
+        # Prepare theft data for heatmap
+        theft_data['hour'] = theft_data['timestamp'].dt.hour
+        theft_data['day_of_week'] = theft_data['timestamp'].dt.day_name()
+        
+        # Aggregate theft data by day and hour
+        theft_heatmap = theft_data.groupby(['day_of_week', 'hour']).size().reset_index(name='incidents')
+        
+        # Day order for proper sorting
+        day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        
+        # Create pivot tables for both heatmaps
+        theft_pivot = theft_heatmap.pivot_table(
+            index='day_of_week', 
+            columns='hour', 
+            values='incidents',
+            aggfunc='sum'
+        ).reindex(day_order).fillna(0)
+        
+        # Ensure all hours are represented in theft pivot
+        for hour in range(24):
+            if hour not in theft_pivot.columns:
+                theft_pivot[hour] = 0
+        theft_pivot = theft_pivot.sort_index(axis=1)
+        
+        traffic_pivot = traffic_patterns.pivot_table(
+            index='day_of_week', 
+            columns='hour', 
+            values='visitor_count',
+            aggfunc='mean'
+        ).reindex(day_order).fillna(0)
+        
+        # Ensure all hours are represented in traffic pivot
+        for hour in range(24):
+            if hour not in traffic_pivot.columns:
+                traffic_pivot[hour] = 0
+        traffic_pivot = traffic_pivot.sort_index(axis=1)
+        
+        # Create tabs for different views
+        tab1, tab2 = st.tabs(["Heatmap Comparison", "Correlation Analysis"])
+        
+        with tab1:
+            col1, col2 = st.columns(2)
             
-            # Traffic heatmap
-            fig = px.imshow(
-                traffic_pivot,
-                labels=dict(x="Hour", y="Day", color="Visitors"),
-                x=list(range(24)),
-                y=day_order,
-                aspect="auto",
-                color_continuous_scale='Blues'
+            with col1:
+                st.markdown("#### Traffic Pattern")
+                
+                # Traffic heatmap
+                fig = px.imshow(
+                    traffic_pivot,
+                    labels=dict(x="Hour", y="Day", color="Visitors"),
+                    x=list(range(24)),
+                    y=day_order,
+                    aspect="auto",
+                    color_continuous_scale='Blues'
+                )
+                
+                fig.update_layout(
+                    height=350,
+                    margin=dict(l=10, r=10, t=10, b=10),
+                    coloraxis_colorbar=dict(title="Visitors")
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                st.markdown("#### Theft Pattern")
+                
+                # Theft heatmap
+                fig = px.imshow(
+                    theft_pivot,
+                    labels=dict(x="Hour", y="Day", color="Incidents"),
+                    x=list(range(24)),
+                    y=day_order,
+                    aspect="auto",
+                    color_continuous_scale='Reds'
+                )
+                
+                fig.update_layout(
+                    height=350,
+                    margin=dict(l=10, r=10, t=10, b=10),
+                    coloraxis_colorbar=dict(title="Incidents")
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+        
+        with tab2:
+            st.markdown("#### Traffic vs. Theft Correlation")
+            
+            # Prepare data for correlation analysis
+            traffic_flat = traffic_pivot.stack().reset_index()
+            traffic_flat.columns = ['day_of_week', 'hour', 'visitors']
+            
+            theft_flat = theft_pivot.stack().reset_index()
+            theft_flat.columns = ['day_of_week', 'hour', 'thefts']
+            
+            # Merge data
+            correlation_data = pd.merge(
+                traffic_flat, 
+                theft_flat, 
+                on=['day_of_week', 'hour'],
+                how='outer'
+            ).fillna(0)
+            
+            # Create scatter plot
+            fig = px.scatter(
+                correlation_data,
+                x='visitors',
+                y='thefts',
+                labels={'visitors': 'Average Visitor Count', 'thefts': 'Theft Incidents'},
+                hover_data=['day_of_week', 'hour'],
+                height=400,
+                trendline='ols'
             )
             
             fig.update_layout(
-                height=350,
-                margin=dict(l=10, r=10, t=10, b=10),
-                coloraxis_colorbar=dict(title="Visitors")
+                margin=dict(l=10, r=10, t=10, b=10)
             )
             
             st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("#### Theft Pattern")
             
-            # Theft heatmap
-            fig = px.imshow(
-                theft_pivot,
-                labels=dict(x="Hour", y="Day", color="Incidents"),
-                x=list(range(24)),
-                y=day_order,
-                aspect="auto",
-                color_continuous_scale='Reds'
-            )
+            # Calculate correlation
+            correlation_value = round(float(correlation_data['visitors'].corr(correlation_data['thefts'])), 2)
             
-            fig.update_layout(
-                height=350,
-                margin=dict(l=10, r=10, t=10, b=10),
-                coloraxis_colorbar=dict(title="Incidents")
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with tab2:
-        st.markdown("#### Traffic vs. Theft Correlation")
-        
-        # Prepare data for correlation analysis
-        traffic_flat = traffic_pivot.stack().reset_index()
-        traffic_flat.columns = ['day_of_week', 'hour', 'visitors']
-        
-        theft_flat = theft_pivot.stack().reset_index()
-        theft_flat.columns = ['day_of_week', 'hour', 'thefts']
-        
-        # Merge data
-        correlation_data = pd.merge(
-            traffic_flat, 
-            theft_flat, 
-            on=['day_of_week', 'hour'],
-            how='outer'
-        ).fillna(0)
-        
-        # Create scatter plot
-        fig = px.scatter(
-            correlation_data,
-            x='visitors',
-            y='thefts',
-            labels={'visitors': 'Average Visitor Count', 'thefts': 'Theft Incidents'},
-            hover_data=['day_of_week', 'hour'],
-            height=400,
-            trendline='ols'
-        )
-        
-        fig.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10)
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Calculate correlation
-        correlation = correlation_data['visitors'].corr(correlation_data['thefts'])
-        
-        # Display correlation insight
-        if correlation > 0.3:
-            st.warning(f"📈 There appears to be a positive correlation ({correlation:.2f}) between visitor traffic and theft incidents. Higher traffic periods may need additional security measures.")
-        elif correlation < -0.3:
-            st.info(f"📉 There appears to be a negative correlation ({correlation:.2f}) between visitor traffic and theft incidents. Theft tends to occur during lower traffic periods.")
-        else:
-            st.success(f"🔄 There is minimal correlation ({correlation:.2f}) between visitor traffic and theft incidents.")
+            # Display correlation insight
+            if correlation_value > 0.3:
+                st.warning(f"📈 There appears to be a positive correlation ({correlation_value}) between visitor traffic and theft incidents. Higher traffic periods may need additional security measures.")
+            elif correlation_value < -0.3:
+                st.info(f"📉 There appears to be a negative correlation ({correlation_value}) between visitor traffic and theft incidents. This suggests thefts may be more common during quieter periods.")
+            else:
+                st.info(f"There is no strong correlation ({correlation_value}) between visitor traffic and theft incidents.")
+                
+    except Exception as e:
+        st.error(f"Error in combined analysis: {str(e)}")
+        st.warning("Could not display combined analysis due to data issue. Please check that there is sufficient data for the selected stores and time period.")

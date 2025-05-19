@@ -210,29 +210,43 @@ def show_store_comparison(theft_data):
 
 def show_heatmap_analysis(theft_data):
     """Display heatmap analysis of theft patterns by time and day"""
-    # Prepare data for heatmap
-    theft_data['hour'] = theft_data['timestamp'].dt.hour
-    theft_data['day_of_week'] = theft_data['timestamp'].dt.day_name()
-    
-    # Day order for proper sorting
-    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    
-    # Aggregate data by day and hour
-    heatmap_data = theft_data.groupby(['day_of_week', 'hour']).size().reset_index(name='incidents')
-    
-    # Create pivot table for heatmap
-    pivot_data = heatmap_data.pivot(index='day_of_week', columns='hour', values='incidents').reindex(day_order)
-    pivot_data = pivot_data.fillna(0)
-    
-    # Generate heatmap
-    fig = px.imshow(
-        pivot_data,
-        labels=dict(x="Hour of Day", y="Day of Week", color="Incident Count"),
-        x=list(range(24)),
-        y=day_order,
-        aspect="auto",
-        color_continuous_scale='Reds'
-    )
+    try:
+        # Prepare data for heatmap
+        theft_data['hour'] = theft_data['timestamp'].dt.hour
+        theft_data['day_of_week'] = theft_data['timestamp'].dt.day_name()
+        
+        # Day order for proper sorting
+        day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        
+        # Aggregate data by day and hour
+        heatmap_data = theft_data.groupby(['day_of_week', 'hour']).size().reset_index(name='incidents')
+        
+        # Create pivot table for heatmap
+        pivot_data = heatmap_data.pivot(index='day_of_week', columns='hour', values='incidents').reindex(day_order)
+        pivot_data = pivot_data.fillna(0)
+        
+        # Ensure all hours are represented (0-23)
+        for hour in range(24):
+            if hour not in pivot_data.columns:
+                pivot_data[hour] = 0
+        
+        # Sort columns to ensure they're in correct order
+        pivot_data = pivot_data.sort_index(axis=1)
+        
+        # Generate heatmap
+        fig = px.imshow(
+            pivot_data,
+            labels=dict(x="Hour of Day", y="Day of Week", color="Incident Count"),
+            x=list(range(24)),
+            y=day_order,
+            aspect="auto",
+            color_continuous_scale='Reds'
+        )
+    except Exception as e:
+        st.error(f"Error creating heatmap: {str(e)}")
+        # Create an empty figure as fallback
+        fig = go.Figure()
+        st.warning("Could not display heatmap due to data issue. Please check that there is theft data available for the selected time period and stores.")
     
     fig.update_layout(
         height=400,
