@@ -1,0 +1,69 @@
+Project Brief for Replit AI / Developer: Intuitive Multi-Store Convenience Store Health Dashboard
+
+As of: May 19, 2025
+
+1. Project Goal:
+To develop a comprehensive and highly intuitive web-based dashboard for convenience store business owners. This dashboard will provide an at-a-glance overview of the health and performance of multiple stores, with options for store managers to view data relevant to their specific location(s). The key focus is on visual clarity, actionable insights, and ease of use.
+
+2. Core Design Philosophy:
+
+Visually Driven: Emphasize charts, graphs, and iconic indicators (e.g., "health dials" progressing from green to red, heatmaps) over dense tables.
+Intuitive Navigation: Ensure users can easily find information and understand what they are seeing without extensive training.
+Actionable Data: Present information in a way that helps owners and managers make informed decisions.
+Role-Based Views: Cater to both multi-store owners (global view, comparisons) and individual store managers (store-specific view).
+Responsive Design: The dashboard must be accessible and functional on desktops, tablets, and mobile devices.
+3. Key Dashboard Modules & Features:
+
+**A. Global Command Center (Main View for Owners):**
+    * **Overall Business Health Dial:** A prominent, color-coded visual (e.g., green/yellow/red dial or bar) summarizing key performance indicators from all modules for the selected stores/period.
+    * **Critical Alerts Panel:** A feed for important notifications (e.g., significant theft spikes, high employee mobile phone usage, rewards campaign underperformance).
+    * **Global Filters:**
+        * Date Range Selector (Today, Yesterday, Last 7 Days, Last 30 Days, Custom).
+        * Store Selector (All Stores, select individual stores, or pre-defined store groups).
+
+**B. Theft Analytics Module:**
+    * **KPIs:** Total theft incidents, incidents per store, estimated monetary impact (if feasible), trends (hourly, daily, weekly, monthly).
+    * **Visualizations:**
+        * **Trend Lines:** Show theft incidents over selected timeframes.
+        * **Bar Charts:** Compare incidents across stores (potentially color-coded by severity or change).
+        * **Heatmaps:** Crucial for showing theft patterns by **time of day vs. day of week** for "All Stores" or per store.
+    * **Drill-Down Capability:** To view lists of incidents, and if possible, link to video snippets from the RTSP stream analysis.
+
+**C. Rewards Program Analytics Module:**
+    * **KPIs:** Total active members, new member acquisition rate, campaign engagement rates (e.g., participation, redemptions), top-performing campaigns, most popular rewards.
+    * **Visualizations:**
+        * **Trend Lines:** For member growth.
+        * **Comparative Charts/Tables:** For campaign performance.
+        * **Donut/Pie Charts:** For rewards popularity.
+        * Bar charts for engagement by store.
+
+**D. Store Visit & Traffic Analytics Module:**
+    * **KPIs:** Total visitor counts (combined and per store), average visitors, peak visit times/days.
+    * **Visualizations:**
+        * **Trend Lines:** Show visitor traffic over time (hourly, daily, weekly).
+        * **Bar/Pie Charts:** For traffic distribution across stores.
+        * **Heatmaps:** To visualize visitor density by **time of day vs. day of week**.
+        * *Creative Combination:* Option to overlay or compare the traffic heatmap with the theft heatmap to identify correlations (e.g., thefts during low/high traffic).
+
+**E. Employee Productivity & Compliance Module (New):**
+    * **Data Source:** Detection of employee mobile phone usage via existing camera systems.
+    * **KPIs:** Number of mobile usage incidents (per store, per shift, or anonymized per employee if appropriate and compliant with privacy), duration of usage, trends.
+    * **Visualizations:**
+        * **Trend Lines:** Show mobile usage incidents over time.
+        * **Bar Charts:** Compare usage across stores or shifts.
+        * **Heatmaps:** To identify patterns of mobile usage by **time of day vs. day of week**.
+    * **Alerts:** For excessive or prolonged usage based on configurable thresholds.
+    * **Important Note:** Data presentation should be sensitive to employee privacy and focus on operational improvement (e.g., identifying understaffing, need for policy clarification) rather than solely punitive measures.
+4. General Dashboard Features & Functionality:
+* Comparative Analysis: Easily compare data vs. previous periods, vs. targets, or between selected stores.
+* Drill-Downs: All summary visuals should allow users to click to see more detailed underlying data.
+* "Manager's Digest" / "Owner's Briefing": Consider a section with AI-generated natural language summaries of key trends, anomalies, and highlights.
+* Customizable Widgets (Optional): Allow users to rearrange or hide/show certain data blocks on their personal view.
+* Export Data: Ability to export views/reports to PDF or CSV.
+
+5. User Roles & Access Control:
+* Business Owner: Full access to all data, all stores, comparative analytics across the entire business, and administrative settings.
+* Store Manager: Default view is filtered to their assigned store(s). Access to cross-store comparisons might be limited or controlled by the owner. Focus on operational metrics relevant to their store's performance.
+
+To the AI/Developer:
+The client is particularly interested in leveraging visual tools like health dials (green to red transitions) and heatmaps for time-based pattern analysis across theft, traffic, and employee mobile usage. The ability to switch between an overall owner view and a store-specific manager view is also a key requirement. Please prioritize an intuitive user experience that allows users to quickly grasp the current business health and identify areas needing attention.
