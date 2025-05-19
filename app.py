@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import time
+import os
 
 # Import components
 from components.global_command import show_global_command
@@ -16,8 +17,10 @@ from components.utils import (
     set_user_role,
     show_login_screen
 )
+from components.database_admin import show_database_admin
 from data_generator import generate_demo_data
 from assets.store_images import show_store_images
+from database import init_db, save_data_to_db, load_data_from_db
 
 # Set page configuration
 st.set_page_config(
@@ -36,8 +39,21 @@ if 'initialized' not in st.session_state:
     st.session_state.user_role = None
     st.session_state.selected_store = None
     
-    # Generate demo data for all components
-    generate_demo_data()
+    # Initialize the database
+    try:
+        init_db()
+        # Try to load data from database first
+        data_loaded = load_data_from_db()
+        
+        # If no data in database, generate demo data
+        if not data_loaded:
+            generate_demo_data()
+            # Save the generated demo data to database
+            save_data_to_db()
+    except Exception as e:
+        st.error(f"Database initialization error: {str(e)}")
+        # Fall back to generated data if database fails
+        generate_demo_data()
 
 # Show login screen if user is not logged in
 if st.session_state.user_role is None:

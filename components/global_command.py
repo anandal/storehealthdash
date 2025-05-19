@@ -230,40 +230,81 @@ def show_health_trends(health_data):
 
 def show_metric_radar_chart(latest_health):
     """Display a radar chart showing all metrics for each store"""
-    # Get average metrics across stores
-    avg_metrics = latest_health.mean()
+    # Check if we have valid data
+    if latest_health.empty:
+        st.warning("No data available for radar chart")
+        return
     
-    # Create radar chart
-    categories = ['Theft Prevention', 'Rewards Program', 'Store Traffic', 'Employee Productivity']
-    values = [
-        avg_metrics['theft_score'],
-        avg_metrics['rewards_score'],
-        avg_metrics['traffic_score'],
-        avg_metrics['employee_score']
-    ]
-    
-    fig = go.Figure()
-    
-    fig.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories,
-        fill='toself',
-        name='Business Performance'
-    ))
-    
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100]
+    # Get average metrics across stores, making sure to handle non-numeric data
+    try:
+        # Ensure we're only averaging numeric columns
+        numeric_health = latest_health.select_dtypes(include=['number'])
+        avg_metrics = numeric_health.mean()
+        
+        # Create radar chart
+        categories = ['Theft Prevention', 'Rewards Program', 'Store Traffic', 'Employee Productivity']
+        
+        # Ensure we have all the required metrics
+        if all(key in avg_metrics for key in ['theft_score', 'rewards_score', 'traffic_score', 'employee_score']):
+            values = [
+                avg_metrics['theft_score'],
+                avg_metrics['rewards_score'],
+                avg_metrics['traffic_score'],
+                avg_metrics['employee_score']
+            ]
+            
+            fig = go.Figure()
+            
+            fig.add_trace(go.Scatterpolar(
+                r=values,
+                theta=categories,
+                fill='toself',
+                name='Business Performance'
+            ))
+            
+            fig.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, 100]
+                    )
+                ),
+                showlegend=False,
+                height=350,
+                margin=dict(l=10, r=10, t=10, b=10)
             )
-        ),
-        showlegend=False,
-        height=350,
-        margin=dict(l=10, r=10, t=10, b=10)
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("Missing required metrics for radar chart")
+    except Exception as e:
+        st.warning(f"Could not create radar chart: {str(e)}")
+        # Create a placeholder radar chart with default values
+        values = [70, 65, 75, 60]
+        
+        fig = go.Figure()
+        
+        fig.add_trace(go.Scatterpolar(
+            r=values,
+            theta=categories,
+            fill='toself',
+            name='Business Performance'
+        ))
+        
+        fig.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 100]
+                )
+            ),
+            showlegend=False,
+            height=350,
+            margin=dict(l=10, r=10, t=10, b=10)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("Displaying sample data due to data processing issues")
 
 def show_metric_comparison(latest_health, metric):
     """Show a comparison of the selected metric across stores"""
