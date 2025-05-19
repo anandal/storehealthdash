@@ -184,6 +184,8 @@ else:
         show_traffic_analytics()
     elif selected_module == "Employee Productivity":
         show_employee_analytics()
+    elif selected_module == "AI Assistant":
+        show_ai_assistant()
     elif selected_module == "Database Admin":
         show_database_admin()
 

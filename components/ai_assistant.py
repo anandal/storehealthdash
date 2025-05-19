@@ -13,8 +13,10 @@ import time
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Initialize Gemini API
-genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+# Initialize Gemini API with API key
+api_key = os.environ.get("GOOGLE_API_KEY")
+if api_key:
+    genai.configure(api_key=api_key)
 
 def show_ai_assistant():
     """Display AI assistant interface with both voice and chat options"""
@@ -169,7 +171,7 @@ Reply in a helpful, concise manner focusing on insights rather than raw numbers.
             enhanced_prompt += "\nInclude a JSON description of a visualization that would help answer this query. Format: <VISUALIZATION>{{json}}</VISUALIZATION>"
         
         # Get response from Gemini
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel(model_name='gemini-1.5-pro')
         response = model.generate_content(enhanced_prompt)
         response_text = response.text
         
