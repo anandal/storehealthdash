@@ -131,13 +131,26 @@ else:
 
     # Module navigation
     st.sidebar.header("Dashboard Modules")
-    modules = [
-        "Global Command Center",
-        "Theft Analytics",
-        "Rewards Program Analytics",
-        "Store Visit & Traffic Analytics",
-        "Employee Productivity"
-    ]
+    
+    # Define available modules based on user role
+    if st.session_state.user_role == "Owner":
+        modules = [
+            "Global Command Center",
+            "Theft Analytics",
+            "Rewards Program Analytics",
+            "Store Visit & Traffic Analytics",
+            "Employee Productivity",
+            "Database Admin"  # Only owners can access database admin
+        ]
+    else:
+        modules = [
+            "Global Command Center",
+            "Theft Analytics",
+            "Rewards Program Analytics",
+            "Store Visit & Traffic Analytics",
+            "Employee Productivity"
+        ]
+    
     selected_module = st.sidebar.radio("Select Module", modules)
     st.session_state.active_module = selected_module
 
@@ -168,6 +181,8 @@ else:
         show_traffic_analytics()
     elif selected_module == "Employee Productivity":
         show_employee_analytics()
+    elif selected_module == "Database Admin":
+        show_database_admin()
 
     # Show store images at the bottom if needed
     if st.checkbox("Show Store Images", value=False):
