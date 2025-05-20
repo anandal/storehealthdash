@@ -128,9 +128,11 @@ def show_member_growth(rewards_data):
         x='date',
         y='total_members',
         title="Rewards Program Membership Growth",
-        height=320,
-        color=SCENEIQ_COLORS['primary']
+        height=320
     )
+    
+    # Manually update the color of the area chart
+    fig.update_traces(fillcolor=SCENEIQ_COLORS['primary'], line_color=SCENEIQ_COLORS['primary'])
     
     # Add range selector for interactive time filtering
     fig.update_layout(
