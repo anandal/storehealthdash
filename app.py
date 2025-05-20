@@ -120,21 +120,21 @@ if 'initialized' not in st.session_state:
     st.session_state.user_role = None
     st.session_state.selected_store = None
     
-    # Generate data for demo
+    # Initialize demo data for display
     generate_demo_data()
     
-    # Initialize the database
+    # Make sure session state has selected stores
+    if 'selected_stores' not in st.session_state or not st.session_state.selected_stores:
+        st.session_state.selected_stores = ["Downtown Mart", "Riverside Convenience"]
+    
+    # Initialize the database if needed
     try:
         init_db()
-        # Try to load data from database first
-        data_loaded = load_data_from_db()
-        
-        # If no data in database, save the demo data we just generated
-        if not data_loaded:
-            save_data_to_db()
+        # Try to load data from database (but we already have session data)
+        load_data_from_db()
     except Exception as e:
-        st.error(f"Database initialization error: {str(e)}")
-        # Data already generated above, continue with session-based data
+        # Just use the session data we already generated
+        pass
 
 # Show login screen if user is not logged in
 if st.session_state.user_role is None:
