@@ -226,43 +226,51 @@ else:
             {"name": "AI Assistant", "icon": "🤖", "desc": "Get insights from your data"}
         ]
     
-    # Module navigation - moved to top of dashboard instead of sidebar
-    st.title("SceneIQ Dashboard Modules")
+    # Compact header with company name and nav in same row
+    header_col1, header_col2 = st.columns([1, 3])
     
-    # Add custom styling for navigation cards
+    with header_col1:
+        st.markdown("## 🏪 SceneIQ")
+    
+    # Add custom styling for compact navigation
     st.markdown("""
     <style>
-    .module-nav-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 20px;
+    div.row-widget.stButton {
+        margin-bottom: 0px;
+        padding: 0px;
+    }
+    div.stButton > button {
+        padding: 5px 8px;
+        font-size: 0.8em;
+        height: auto;
+        min-height: 0px;
     }
     </style>
     """, unsafe_allow_html=True)
     
-    # Create horizontal navigation at the top
-    col_count = min(4, len(modules))  # Maximum 4 columns
-    nav_cols = st.columns(col_count)
+    # Create compact horizontal navigation in the header
+    with header_col2:
+        st.markdown("### Dashboard Modules")
+        cols = st.columns(len(modules))
+        for i, module in enumerate(modules):
+            with cols[i]:
+                btn_style = "primary" if module["name"] == st.session_state.active_module else "secondary"
+                btn_label = f"{module['icon']}" # Just show icons to save space
+                if st.button(
+                    btn_label, 
+                    key=f"nav_{module['name']}", 
+                    help=module['name'] + ": " + module['desc'],
+                    type=btn_style,
+                    use_container_width=True
+                ):
+                    st.session_state.active_module = module["name"]
+                    st.rerun()
     
-    for i, module in enumerate(modules):
-        with nav_cols[i % col_count]:
-            btn_style = "primary" if module["name"] == st.session_state.active_module else "secondary"
-            if st.button(
-                f"{module['icon']} {module['name']}", 
-                key=f"nav_{module['name']}", 
-                help=module['desc'],
-                type=btn_style,
-                use_container_width=True
-            ):
-                st.session_state.active_module = module["name"]
-                st.rerun()
+    # Display current module in small text to save space
+    st.markdown(f"**{st.session_state.active_module}** | {datetime.now().strftime('%B %d, %Y')}")
     
-    # Add a separator
-    st.markdown("---")
-    
-    # Display current module prominently in main content area
-    st.subheader(f"Current View: {st.session_state.active_module}")
+    # Add a thin separator line
+    st.markdown('<hr style="height:1px;border:none;background-color:#e0e0e0;margin-top:0px;margin-bottom:10px;">', unsafe_allow_html=True)
     
     selected_module = st.session_state.active_module
 
