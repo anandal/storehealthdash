@@ -226,51 +226,63 @@ else:
             {"name": "AI Assistant", "icon": "🤖", "desc": "Get insights from your data"}
         ]
     
-    # Compact header with company name and nav in same row
-    header_col1, header_col2 = st.columns([1, 3])
-    
-    with header_col1:
-        st.markdown("## 🏪 SceneIQ")
-    
-    # Add custom styling for compact navigation
+    # Ultra-compact header - minimize white space
     st.markdown("""
     <style>
+    /* Remove extra padding in header area */
+    .block-container {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
     div.row-widget.stButton {
-        margin-bottom: 0px;
+        margin: 0px;
         padding: 0px;
     }
     div.stButton > button {
-        padding: 5px 8px;
-        font-size: 0.8em;
-        height: auto;
-        min-height: 0px;
+        padding: 2px 5px;
+        font-size: 0.7em;
+        height: 30px;
+        min-height: 30px;
+    }
+    /* Remove extra spaces around header elements */
+    h1, h2, h3, h4, h5, h6 {
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.2rem !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    .stMarkdown {
+        margin-bottom: 0px;
     }
     </style>
-    """, unsafe_allow_html=True)
     
-    # Create compact horizontal navigation in the header
-    with header_col2:
-        st.markdown("### Dashboard Modules")
-        cols = st.columns(len(modules))
-        for i, module in enumerate(modules):
-            with cols[i]:
-                btn_style = "primary" if module["name"] == st.session_state.active_module else "secondary"
-                btn_label = f"{module['icon']}" # Just show icons to save space
-                if st.button(
-                    btn_label, 
-                    key=f"nav_{module['name']}", 
-                    help=module['name'] + ": " + module['desc'],
-                    type=btn_style,
-                    use_container_width=True
-                ):
-                    st.session_state.active_module = module["name"]
-                    st.rerun()
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+        <div style="display:flex;align-items:center;">
+            <h3 style="margin:0;padding-right:10px;">🏪 SceneIQ</h3>
+            <p style="margin:0;font-weight:bold;padding-right:10px;color:#4285F4;">{}</p>
+            <p style="margin:0;font-size:0.8em;color:#555;">{}</p>
+        </div>
+    </div>
+    """.format(st.session_state.active_module, datetime.now().strftime('%B %d, %Y')), unsafe_allow_html=True)
     
-    # Display current module in small text to save space
-    st.markdown(f"**{st.session_state.active_module}** | {datetime.now().strftime('%B %d, %Y')}")
+    # Create ultra-compact horizontal navigation
+    cols = st.columns(len(modules))
+    for i, module in enumerate(modules):
+        with cols[i]:
+            btn_style = "primary" if module["name"] == st.session_state.active_module else "secondary"
+            btn_label = f"{module['icon']}" # Just show icons to save space
+            if st.button(
+                btn_label, 
+                key=f"nav_{module['name']}", 
+                help=module['name'] + ": " + module['desc'],
+                type=btn_style,
+                use_container_width=True
+            ):
+                st.session_state.active_module = module["name"]
+                st.rerun()
     
-    # Add a thin separator line
-    st.markdown('<hr style="height:1px;border:none;background-color:#e0e0e0;margin-top:0px;margin-bottom:10px;">', unsafe_allow_html=True)
+    # Add a thin separator line and no extra spacing
+    st.markdown('<hr style="height:1px;border:none;background-color:#e0e0e0;margin:0;">', unsafe_allow_html=True)
     
     selected_module = st.session_state.active_module
 

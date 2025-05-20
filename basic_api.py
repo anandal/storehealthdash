@@ -17,6 +17,8 @@ app = FastAPI(
     title="SceneIQ API",
     description="API for managing convenience store analytics data",
     version="1.0.0",
+    docs_url="/",  # Make docs the root endpoint for easy access
+    redoc_url="/redoc"
 )
 
 # Configure CORS
