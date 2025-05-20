@@ -226,14 +226,9 @@ else:
             {"name": "AI Assistant", "icon": "🤖", "desc": "Get insights from your data"}
         ]
     
-    # Ultra-compact header - minimize white space
+    # Simple compact header
     st.markdown("""
     <style>
-    /* Remove extra padding in header area */
-    .block-container {
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
-    }
     div.row-widget.stButton {
         margin: 0px;
         padding: 0px;
@@ -244,26 +239,15 @@ else:
         height: 30px;
         min-height: 30px;
     }
-    /* Remove extra spaces around header elements */
-    h1, h2, h3, h4, h5, h6 {
-        margin-top: 0.2rem !important;
-        margin-bottom: 0.2rem !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-    }
-    .stMarkdown {
-        margin-bottom: 0px;
-    }
     </style>
+    """, unsafe_allow_html=True)
     
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
-        <div style="display:flex;align-items:center;">
-            <h3 style="margin:0;padding-right:10px;">🏪 SceneIQ</h3>
-            <p style="margin:0;font-weight:bold;padding-right:10px;color:#4285F4;">{}</p>
-            <p style="margin:0;font-size:0.8em;color:#555;">{}</p>
-        </div>
-    </div>
-    """.format(st.session_state.active_module, datetime.now().strftime('%B %d, %Y')), unsafe_allow_html=True)
+    # Simple and reliable row layout
+    header_cols = st.columns([1, 3])
+    with header_cols[0]:
+        st.markdown("### 🏪 SceneIQ")
+    with header_cols[1]:
+        st.markdown(f"**{st.session_state.active_module}** | {datetime.now().strftime('%B %d, %Y')}")
     
     # Create ultra-compact horizontal navigation
     cols = st.columns(len(modules))
