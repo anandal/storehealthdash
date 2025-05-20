@@ -109,11 +109,19 @@ st.markdown("""
 # Initialize session state variables
 if 'initialized' not in st.session_state:
     st.session_state.initialized = True
-    st.session_state.selected_stores = []
+    
+    # Initialize with demo store selection
+    demo_stores = ["Downtown Mart", "Riverside Convenience", "Oakwood Express", "Sunset Shop & Go"]
+    st.session_state.selected_stores = demo_stores[:2]  # Select first two stores by default
+    
+    # Set other defaults
     st.session_state.date_range = (datetime.now() - timedelta(days=30), datetime.now())
     st.session_state.active_module = "Global Command Center"
     st.session_state.user_role = None
     st.session_state.selected_store = None
+    
+    # Generate data for demo
+    generate_demo_data()
     
     # Initialize the database
     try:
@@ -121,15 +129,12 @@ if 'initialized' not in st.session_state:
         # Try to load data from database first
         data_loaded = load_data_from_db()
         
-        # If no data in database, generate demo data
+        # If no data in database, save the demo data we just generated
         if not data_loaded:
-            generate_demo_data()
-            # Save the generated demo data to database
             save_data_to_db()
     except Exception as e:
         st.error(f"Database initialization error: {str(e)}")
-        # Fall back to generated data if database fails
-        generate_demo_data()
+        # Data already generated above, continue with session-based data
 
 # Show login screen if user is not logged in
 if st.session_state.user_role is None:
