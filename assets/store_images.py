@@ -16,11 +16,13 @@ def show_store_images():
         "https://via.placeholder.com/400x300/0F9D58/FFFFFF?text=Sunset+Shop+%26+Go"
     ]
     
-    # Store names from session state
+    # Store names from session state - ensure we always have store names
     store_names = st.session_state.get('selected_stores', [])
     if not store_names:
-        # Fallback if no stores are selected
-        store_names = ["Downtown Mart", "Riverside Convenience", "Oakwood Express", "Sunset Shop & Go"]
+        # Always use these default values if nothing is selected
+        store_names = ["Downtown Mart", "Riverside Convenience"]
+        # Update session state to maintain consistency
+        st.session_state.selected_stores = store_names
     
     # Limit to available images
     num_images = min(len(store_images), len(store_names))
