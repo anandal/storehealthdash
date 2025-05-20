@@ -226,43 +226,43 @@ else:
             {"name": "AI Assistant", "icon": "🤖", "desc": "Get insights from your data"}
         ]
     
-    # Module navigation - visual selector instead of sidebar radio
-    st.sidebar.header("SceneIQ Dashboard Modules")
+    # Module navigation - moved to top of dashboard instead of sidebar
+    st.title("SceneIQ Dashboard Modules")
     
-    # User can toggle between compact and detailed view
-    if 'compact_nav' not in st.session_state:
-        st.session_state.compact_nav = False
-        
-    st.sidebar.caption("Click to switch navigation style:")
-    col1, col2 = st.sidebar.columns(2)
-    with col1:
-        if st.button("Compact View", use_container_width=True):
-            st.session_state.compact_nav = True
-            st.rerun()
-    with col2:
-        if st.button("Detailed View", use_container_width=True):
-            st.session_state.compact_nav = False
-            st.rerun()
+    # Add custom styling for navigation cards
+    st.markdown("""
+    <style>
+    .module-nav-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
-    # Select module based on navigation style
-    if st.session_state.compact_nav:
-        # Compact navigation with icons only
-        cols = st.sidebar.columns(len(modules))
-        for i, col in enumerate(cols):
-            with col:
-                if st.button(modules[i]["icon"], help=modules[i]["name"], use_container_width=True):
-                    st.session_state.active_module = modules[i]["name"]
-                    st.rerun()
-    else:
-        # Detailed navigation with cards
-        for module in modules:
-            module_card = f"### {module['icon']} {module['name']}\n{module['desc']}"
-            if st.sidebar.button(module_card, use_container_width=True):
+    # Create horizontal navigation at the top
+    col_count = min(4, len(modules))  # Maximum 4 columns
+    nav_cols = st.columns(col_count)
+    
+    for i, module in enumerate(modules):
+        with nav_cols[i % col_count]:
+            btn_style = "primary" if module["name"] == st.session_state.active_module else "secondary"
+            if st.button(
+                f"{module['icon']} {module['name']}", 
+                key=f"nav_{module['name']}", 
+                help=module['desc'],
+                type=btn_style,
+                use_container_width=True
+            ):
                 st.session_state.active_module = module["name"]
                 st.rerun()
     
-    # Show currently active module
-    st.sidebar.markdown(f"**Current Module:** {st.session_state.active_module}")
+    # Add a separator
+    st.markdown("---")
+    
+    # Display current module prominently in main content area
+    st.subheader(f"Current View: {st.session_state.active_module}")
     
     selected_module = st.session_state.active_module
 
