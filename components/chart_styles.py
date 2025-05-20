@@ -18,6 +18,7 @@ SCENEIQ_COLORS = {
     'warning': '#FF6D01',    # Orange
     'neutral': '#202124',    # Dark Gray
     'light': '#F2F2F2',      # Light Gray
+    'accent': '#34A853'      # Accent Green
 }
 
 # Extended color palette for multiple series
