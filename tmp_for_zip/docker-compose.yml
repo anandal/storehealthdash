@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - PGHOST=${PGHOST}
+      - PGDATABASE=${PGDATABASE}
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - PGPORT=${PGPORT}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - ..:/app
+    depends_on:
+      - db
+    networks:
+      - sceneiq-network
+    restart: on-failure
+    command: /bin/bash -c "cd /app && python -m streamlit run app.py --server.port=5000 --server.headless=true --server.address=0.0.0.0 & python basic_api.py"
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=sceneiq
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - sceneiq-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  sceneiq-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
